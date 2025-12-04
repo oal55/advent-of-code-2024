@@ -20,10 +20,12 @@ fn main() {
     match args {
         AocArgs::RunAll => run_all_days(),
         AocArgs::RunDay(day, filepath, is_custom) => {
+            println!("day {day} - filepath: {filepath}, is_custom: {is_custom}");
+
             if !is_custom {
-                ensure_aoc_input_exists(day);
+                ensure_aoc_input_exists(2025, day);
             }
-            let (part1, part2, duration) = run_day(2024, day, &filepath);
+            let (part1, part2, duration) = run_day(2025, day, &filepath);
             println!("Day {day}:");
             println!("  part1: {:width$}  part2: {}", part1, part2, width=18);
             println!("  took - {:.2?}", duration);
@@ -54,9 +56,9 @@ fn run_all_days() {
     };
 
     for (day, (expected_part1, expected_part2)) in expected::SOLUTIONS.iter().copied() {
-        ensure_aoc_input_exists(day); // maybe extract this into a module that handles load instead of spamming the website 
+        ensure_aoc_input_exists(2025, day); // maybe extract this into a module that handles load instead of spamming the website 
         println!("Running day {day}:");
-        let (part1, part2, duration) = run_day(2024, day, &aoc_file_path(day));
+        let (part1, part2, duration) = run_day(2024, day, &aoc_file_path(2025, day));
         let part1_correct = part1 == *expected_part1;
         let part2_correct = part2 == *expected_part2;
         pretty_print(Some((part1, part1_correct)), Some((part2, part2_correct)));
@@ -79,16 +81,18 @@ fn run_day(year: u32, day: u32, input_file_path: &str) -> (String, String, Durat
     (t_part1.to_string(), t_part2.to_string(), elapsed)
 }
 
-fn ensure_aoc_input_exists(day: u32) {
-    let relative_filepath = aoc_file_path(day);
+fn ensure_aoc_input_exists(year: u32, day: u32) {
+    let relative_filepath = aoc_file_path(year, day);
     let file_exists = fs::exists(&relative_filepath).unwrap_or_else(|_| panic!("Cannot confirm whether file exists at {}", relative_filepath));
     if file_exists {
+        println!("File exists");
+
         return
     }
     println!("Fetching input file");
 
     let session_id = env::var("SESSION_ID").expect("No session id in env");
-    let url = format!("https://adventofcode.com/2024/day/{day}/input");
+    let url = format!("https://adventofcode.com/2025/day/{day}/input");
     let response = reqwest::blocking::Client::new().get(url)
         .header("cookie", format!("session={session_id}"))
         .send()
@@ -97,7 +101,7 @@ fn ensure_aoc_input_exists(day: u32) {
     fs::write(relative_filepath, &contents).expect("Cannot write file.");
 }
 
-fn aoc_file_path(day: u32) -> String { format!("{INPUT_FILES_DIR_NAME}/day{:0>2}.txt", day) }
+fn aoc_file_path(year: u32, day: u32) -> String { format!("{INPUT_FILES_DIR_NAME}/{year}/day{:0>2}.txt", day) }
 
 impl AocArgs {
     fn new_from_args() -> Self {
@@ -106,10 +110,14 @@ impl AocArgs {
             return Self::RunAll;
         }
 
+        args.iter().for_each(|a| println!("arg: {a}"));
+        let len = args.len();
+        println!("len: {len}");
+
         let day = args[1].as_str().parse::<u32>().expect("Malformed day argument.");
         let (filepath, is_custom) = match args.get(2) {
-            Some(path) => (path.to_string(), false),
-            None => (aoc_file_path(day), true)
+            Some(path) => (path.to_string(), true),
+            None => (aoc_file_path(2025, day), false)
         };
         Self::RunDay(day, filepath, is_custom)
     }
