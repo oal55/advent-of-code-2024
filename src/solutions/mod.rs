@@ -27,6 +27,7 @@ use y2024::day24 as run_2024_day_24;
 use y2024::day25 as run_2024_day_25;
 
 use y2025::day01 as run_2025_day_01;
+use y2025::day02 as run_2025_day_02;
 
 
 type SolutionFunction<T, V> = fn(filename: &str) -> (T, V);
@@ -63,6 +64,7 @@ pub fn get_solution_function(year: u32, day: u32) -> DisplayFunction {
         },
         2025 => match day {
             1 => wrap(run_2025_day_01),
+            2 => wrap(run_2025_day_02),
             _ => panic!("Bad year")
         }
         _ => panic!("Bad year")
